@@ -21,18 +21,25 @@ def s2model(input_shape, num_layers=32, feature_size=256):
     input20 = Input(shape=input_shape[1])
     if len(input_shape) == 3:
         input60 = Input(shape=input_shape[2])
-        x = Concatenate(axis=1)([input10, input20, input60])
+        # x = Concatenate(axis=1)([input10, input20, input60])
+        x = Concatenate(axis=3)([input10, input20, input60])
+        
     else:
-        x = Concatenate(axis=1)([input10, input20])
+        # x = Concatenate(axis=1)([input10, input20])
+        x = Concatenate(axis=3)([input10, input20])
+        
 
     # Treat the concatenation
-    x = Conv2D(feature_size, (3, 3), kernel_initializer='he_uniform', activation='relu', padding='same')(x)
+    x = K.permute_dimensions(x, (0,3,1,2))
+    # x.permute_dimensions(0,3,1,2)
+    print(x.shape)
+    x = Conv2D(feature_size, (3, 3), kernel_initializer='he_uniform', activation='relu', padding='same')(x) #, data_format='channels_first'
 
     for i in range(num_layers):
         x = resBlock(x, feature_size)
 
     # One more convolution, and then we add the output of our first conv layer
-    x = Conv2D(input_shape[-1][0], (3, 3), kernel_initializer='he_uniform', padding='same')(x)
+    x = Conv2D(input_shape[-1][0], (3, 3), kernel_initializer='he_uniform', padding='same')(x) #, data_format='channels_first'
     # x = Dropout(0.3)(x)
     if len(input_shape) == 3:
         x = Add()([x, input60])

@@ -19,7 +19,7 @@ def DSen2_20(d10, d20, deep=False):
     #     deep: specifies whether to use VDSen2 (True), or DSen2 (False)
 
     border = 8
-    p10, p20 = get_test_patches(d10, d20, patchSize=128, border=border)
+    p10, p20 = get_test_patches(d10, d20, patchSize=120, border=border)#128
     p10 /= SCALE
     p20 /= SCALE
     test = [p10, p20]
@@ -38,7 +38,7 @@ def DSen2_60(d10, d20, d60, deep=False):
     #     deep: specifies whether to use VDSen2 (True), or DSen2 (False)
 
     border = 12
-    p10, p20, p60 = get_test_patches60(d10, d20, d60, patchSize=192, border=border)
+    p10, p20, p60 = get_test_patches60(d10, d20, d60, patchSize=120, border=border)#192
     p10 /= SCALE
     p20 /= SCALE
     p60 /= SCALE
@@ -65,3 +65,38 @@ def _predict(test, input_shape, deep=False, run_60=False):
     prediction = model.predict(test, verbose=1)
     return prediction
 
+
+class Solver():
+    def __init__(self) -> None:
+        input_shape = ((4, None, None), (6, None, None))
+        predict_file = MDL_PATH+'s2_032_lr_1e-04.hdf5'
+        self.model20 = s2model(input_shape, num_layers=6, feature_size=128)
+        self.model20.load_weights(predict_file)
+
+        input_shape = ((4, None, None), (6, None, None), (2, None, None))
+        predict_file = MDL_PATH+'s2_030_lr_1e-05.hdf5'
+        self.model60 = s2model(input_shape, num_layers=6, feature_size=128)
+        self.model60.load_weights(predict_file)
+        
+    def predict20(self, d10, d20):
+        border = 8
+        p10, p20 = get_test_patches(d10, d20, patchSize=120, border=border)#128
+        p10 /= SCALE
+        p20 /= SCALE
+        test = [p10, p20]
+        prediction = self.model20.predict(test, verbose=1)
+        images = recompose_images(prediction, border=border, size=d10.shape)
+        images *= SCALE
+        return images
+
+    def predict60(self, d10, d20, d60):
+        border = 8
+        p10, p20, p60 = get_test_patches60(d10, d20, d60, patchSize=120, border=border)#192
+        p10 /= SCALE
+        p20 /= SCALE
+        p60 /= SCALE
+        test = [p10, p20, p60]
+        prediction = self.model60.predict(test, verbose=1)
+        images = recompose_images(prediction, border=border, size=d10.shape)
+        images *= SCALE
+        return images
